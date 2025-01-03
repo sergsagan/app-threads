@@ -13,5 +13,11 @@ const userStore = useUserStore()
         { 'invisible max-h-0 transition-all duration-200 ease-out': !userStore.isMenuOverlay }
       ]"
     />
+    <Modal
+      :class="[
+        { 'visible max-h-screen transition-all duration-200 ease-in': userStore.isLogoutOverlay },
+        { 'invisible max-h-0 transition-all duration-200 ease-out': !userStore.isLogoutOverlay }
+      ]"
+    />
   </div>
 </template>
