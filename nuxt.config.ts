@@ -5,7 +5,7 @@ export default defineNuxtConfig({
   modules: [
     '@nuxt/icon',
     '@nuxtjs/tailwindcss',
-    //'@nuxtjs/supabase',
+    '@nuxtjs/supabase',
     '@pinia/nuxt',
     '@vite-pwa/nuxt'
   ],
@@ -14,9 +14,9 @@ export default defineNuxtConfig({
       collections: ['uil', 'ms', 'bi', 'ei', 'solar', 'mdi', 'eos-icons', 'ph']
     }
   },
-  /*supabase: {
+  supabase: {
     redirect: false
-  },*/
+  },
   runtimeConfig: {
     public: {
       bucketUrl: process.env.BUCKET_URL
