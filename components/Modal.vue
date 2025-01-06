@@ -2,13 +2,13 @@
 import { useUserStore } from '@/stores/user'
 
 const userStore = useUserStore()
-//const client = useSupabaseClient()
+const client = useSupabaseClient()
 
-/*const logout = () => {
+const logout = () => {
   client.auth.signOut()
   userStore.isLogoutOverlay = false
   return navigateTo('/')
-}*/
+}
 </script>
 
 <template>
@@ -25,7 +25,7 @@ const userStore = useUserStore()
         <Icon name="mdi:close" size="25" />
       </button>
       <div class="my-1 border-b border-b-gray-700" />
-      <button class="flex w-full items-center justify-between bg-black p-3">
+      <button class="flex w-full items-center justify-between bg-black p-3" @click="logout()">
         <div>Log Out</div>
         <Icon name="ph:sign-out" size="25" />
       </button>

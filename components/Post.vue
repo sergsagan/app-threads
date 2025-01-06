@@ -11,8 +11,45 @@ let isDeleting = ref(false)
 const emits = defineEmits(['isDeleted'])
 const props = defineProps({ post: Object })
 
-//const client = useSupabaseClient()
-//const user = useSupabaseUser()
+const client = useSupabaseClient()
+const user = useSupabaseUser()
+
+const hasLikedComputed = computed(() => {
+  if (!user.value) {
+    return true
+  }
+  let res = false
+
+  props.post.likes.forEach((like) => {
+    if (like.userId === user.value.identities[0].user_id && like.postId === props.post.id) {
+      res = true
+    }
+  })
+  return res
+})
+
+const deletePost = async (id, picture) => {
+  let res = confirm(`Are you sure you want to delete this post?`)
+  if (!res) {
+    return false
+  }
+
+  try {
+    {
+      isMenu.value = false
+      isDeleting.value = true
+
+      const { data, error } = await client.storage.from('app-threads-files').remove([picture])
+      await $fetch(`/api/delete-post/${id}`, { method: 'DELETE' })
+      emits('isDeleted', true)
+
+      isDeleting.value = false
+    }
+  } catch (error) {
+    console.log(error)
+    isDeleting.value = false
+  }
+}
 </script>
 
 <template>
@@ -23,7 +60,11 @@ const props = defineProps({ post: Object })
           <img :src="post.image" alt="img" class="h-[35px] rounded-full" />
           <div class="ml-2 text-[18px] font-semibold">{{ post.name }}</div>
         </div>
-        <div class="relative" @click="isMenu = !isMenu">
+        <div
+          v-if="user && user.identities && user.identities[0].user_id === post.userId"
+          class="relative"
+          @click="isMenu = !isMenu"
+        >
           <button
             :class="isMenu ? 'bg-gray-800' : ''"
             :disabled="isDeleting"
@@ -36,6 +77,7 @@ const props = defineProps({ post: Object })
           <div v-if="isMenu" class="absolute right-0 z-20 mt-1 rounded border border-gray-600">
             <button
               class="flex w-full items-center justify-between gap-2 rounded bg-black py-1 pl-4 pr-3 text-red-500 hover:bg-gray-900"
+              @click="deletePost(post.id, post.picture)"
             >
               <div>Delete</div>
               <Icon name="solar:trash-bin-trash-broken" size="20" />
@@ -51,7 +93,7 @@ const props = defineProps({ post: Object })
           <div class="py-2 text-gray-300">{{ post.text }}</div>
           <img
             v-if="post && post.picture"
-            :src="post.picture"
+            :src="runtimeConfig.public.bucketUrl + post.picture"
             alt="img"
             class="mx-auto mt-2 w-full rounded pr-2"
           />

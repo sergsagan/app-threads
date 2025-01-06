@@ -11,7 +11,7 @@ export default defineNuxtConfig({
   ],
   icon: {
     serverBundle: {
-      collections: ['uil', 'ms', 'bi', 'ei', 'solar', 'mdi', 'eos-icons', 'ph']
+      collections: ['uil', 'ms', 'bi', 'ei', 'tabler', 'solar', 'mdi', 'eos-icons', 'ph']
     }
   },
   supabase: {

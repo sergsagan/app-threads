@@ -1,11 +1,10 @@
 <script setup>
 import { useUserStore } from '@/stores/user'
-
-//import { v4 as uuidv4 } from 'uuid'
+import { v4 as uuidv4 } from 'uuid'
 
 const userStore = useUserStore()
-//const client = useSupabaseClient()
-//const user = useSupabaseUser()
+const client = useSupabaseClient()
+const user = useSupabaseUser()
 
 let text = ref(null)
 let isLoading = ref(false)
@@ -36,10 +35,57 @@ const handleClose = () => {
   userStore.isMenuOverlay = false
   clearData()
 }
+
+const createPost = async () => {
+  let dataOut = null
+  let errorOut = null
+
+  isLoading.value = true
+
+  if (fileData.value) {
+    const { data, error } = await client.storage
+      .from('app-threads-files')
+      .upload(`${uuidv4()}.jpg`, fileData.value)
+
+    dataOut = data
+    errorOut = error
+  }
+
+  if (errorOut) {
+    console.log(errorOut)
+    return errorOut
+  }
+
+  let pic = ''
+  if (dataOut) {
+    pic = dataOut.path ? dataOut.path : ''
+  }
+
+  try {
+    await $fetch(`/api/create-post`, {
+      method: 'POST',
+      body: {
+        userId: user.value.identities[0].user_id,
+        name: user.value.identities[0].identity_data.full_name,
+        image: user.value.identities[0].identity_data.avatar_url,
+        text: text.value,
+        picture: pic
+      }
+    })
+    await userStore.getAllPosts()
+    userStore.isMenuOverlay = false
+
+    clearData()
+    isLoading.value = false
+  } catch (error) {
+    console.log(error)
+    isLoading.value = false
+  }
+}
 </script>
 
 <template>
-  <div class="fixed bottom-0 z-50 size-full overflow-hidden">
+  <div id="CreatePost" class="fixed bottom-0 z-50 size-full overflow-hidden">
     <div class="size-full overflow-auto bg-black text-white">
       <div
         class="mx-auto flex max-w-[500px] items-center justify-start border-b border-b-gray-700 py-4"
@@ -52,9 +98,15 @@ const handleClose = () => {
       <div id="Post" class="bottom-0 z-40 mx-auto max-h-[100vh-200px] w-full max-w-[500px] px-3">
         <div class="w-full py-2">
           <div class="flex items-center">
-            <div class="flex items-center text-white">
-              <img alt="img" src="https://picsum.photos/id/223/50" />
-              <div class="ml-2 text-[18px] font-semibold">Serg Sagan</div>
+            <div v-if="user" class="flex items-center text-white">
+              <img
+                :src="user.identities[0].identity_data.avatar_url"
+                alt="img"
+                class="h-[35px] rounded-full"
+              />
+              <div class="ml-2 text-[18px] font-semibold">
+                {{ user.identities[0].identity_data.full_name }}
+              </div>
             </div>
           </div>
           <div class="relative flex w-full items-center">
@@ -79,7 +131,7 @@ const handleClose = () => {
                   </div>
                   <label for="fileInput">
                     <Icon name="clarity:paperclip-line" size="25" style="color: white" />
-                    <Input
+                    <input
                       id="fileInput"
                       ref="file"
                       accept=".jpg, .jpeg, .png"
@@ -99,6 +151,7 @@ const handleClose = () => {
         :class="isLoading ? 'text-gray-600' : 'text-blue-600'"
         :disabled="isLoading"
         class="fixed bottom-0 float-right inline-block w-full border-t border-t-gray-700 bg-black p-4 text-lg font-bold"
+        @click="createPost"
       >
         <div v-if="!isLoading">Post</div>
         <div v-else class="flex items-center justify-center gap-2">
