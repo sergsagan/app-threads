@@ -27,20 +27,16 @@ onBeforeMount(async () => {
 
 onMounted(() => {
   watchEffect(() => {
-    if (userStore.posts && userStore.posts.length >= 1) {
-      posts.value = userStore.posts
-      isPosts.value = true
-    }
+    posts.value = userStore.posts
+    isPosts.value = !!(userStore.posts && userStore.posts.length >= 1)
   })
 })
 
 watch(
   () => posts.value,
   () => {
-    if (userStore.posts && userStore.posts.length >= 1) {
-      posts.value = userStore.posts
-      isPosts.value = true
-    }
+    posts.value = userStore.posts
+    isPosts.value = !!(userStore.posts && userStore.posts.length >= 1)
   },
   { deep: true }
 )

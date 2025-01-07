@@ -50,6 +50,60 @@ const deletePost = async (id, picture) => {
     isDeleting.value = false
   }
 }
+
+const likePost = async (id) => {
+  isLike.value = true
+
+  try {
+    await $fetch(`/api/like-post/`, {
+      method: 'POST',
+      body: {
+        userId: user.value.identities[0].user_id,
+        postId: id
+      }
+    })
+    await userStore.getAllPosts()
+    isLike.value = false
+  } catch (error) {
+    console.log(error)
+    isLike.value = false
+  }
+}
+
+const unlikePost = async (id) => {
+  isLike.value = true
+
+  try {
+    await $fetch(`/api/unlike-post/${id}`, { method: 'DELETE' })
+    await userStore.getAllPosts()
+    isLike.value = false
+  } catch (error) {
+    console.log(error)
+    isLike.value = false
+  }
+}
+
+const likesFunc = () => {
+  let likePostObj = null
+
+  if (props.post.likes.length < 1) {
+    likePost(props.post.id)
+    return null
+  } else {
+    props.post.likes.forEach((like) => {
+      if (like.userId === user.value.identities[0].user_id && like.postId === props.post.id) {
+        likePostObj = like
+      }
+    })
+  }
+
+  if (likePostObj) {
+    unlikePost(likePostObj.id)
+    return null
+  }
+
+  likePost(props.post.id)
+}
 </script>
 
 <template>
@@ -99,16 +153,26 @@ const deletePost = async (id, picture) => {
           />
 
           <div class="absolute ml-2 mt-2 w-full">
-            <button :disabled="isLike" class="flex items-center gap-1">
+            <button :disabled="isLike" class="flex items-center gap-1" @click="likesFunc()">
               <Icon
+                v-if="!hasLikedComputed"
                 class="cursor-pointer rounded-full p-1 text-white hover:bg-gray-800"
                 name="mdi:cards-heart-outline"
+                size="28"
+              />
+              <Icon
+                v-else
+                class="cursor-pointer rounded-full p-1 text-red-500 hover:bg-gray-800"
+                name="mdi:cards-heart"
                 size="28"
               />
             </button>
             <div class="relative text-sm text-gray-500">
               <div>
-                <span>4</span>
+                <span v-if="!isLike">{{ post.likes.length }}</span>
+                <span v-else>
+                  <Icon name="eos-icons:bubble-loading" size="13" style="color: white" />
+                </span>
                 likes
               </div>
             </div>
@@ -120,19 +184,11 @@ const deletePost = async (id, picture) => {
       <div class="flex items-center">
         <div class="flex w-[42px] flex-wrap items-center gap-1 text-white">
           <div class="flex gap-0.5">
-            <img
-              alt="img"
-              class="mt-2 h-[14px] rounded-full"
-              src="https://picsum.photos/id/202/50"
-            />
-            <img alt="img" class="h-[17px] rounded-full" src="https://picsum.photos/id/223/50" />
+            <img :src="post.image" alt="img" class="mt-2 h-[14px] rounded-full" />
+            <img :src="post.image" alt="img" class="h-[17px] rounded-full" />
           </div>
           <div class="flex items-center">
-            <img
-              alt="img"
-              class="ml-4 h-[11px] rounded-full"
-              src="https://picsum.photos/id/99/50"
-            />
+            <img :src="post.image" alt="img" class="ml-4 h-[11px] rounded-full" />
           </div>
         </div>
       </div>
